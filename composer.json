@@ -1,0 +1,21 @@
+{
+  "name": "mch0lic/wp-cli-gdpr-dump",
+  "description": "",
+  "type": "wp-cli-package",
+  "keywords": ["wp-cli", "wordpress"],
+  "homepage": "https://github.com/mch0lic/wp-cli-gdpr-dump",
+  "license": "GPLv3",
+  "authors": [
+    {
+      "name": "Mindaugas Budreika",
+      "homepage": "https://github.com/mch0lic"
+    }
+  ],
+  "require": {
+    "php": ">=7.3",
+    "smile/gdpr-dump": "^2.2"
+  },
+  "autoload": {
+    "files": ["src/class-lint-command.php"]
+  }
+}
