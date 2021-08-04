@@ -16,6 +16,6 @@
     "smile/gdpr-dump": "^2.2"
   },
   "autoload": {
-    "files": ["src/class-lint-command.php"]
+    "files": ["src/class-gdpr-dump-command.php"]
   }
 }
