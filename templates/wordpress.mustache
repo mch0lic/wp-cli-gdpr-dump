@@ -1,0 +1,66 @@
+---
+database:
+    host: "{{db_host}}"
+    user: "{{db_user}}"
+    password: "{{db_pass}}"
+    name: "{{db_name}}"
+
+dump:
+    output: "backup-{YmdHis}.sql"
+    compress: "none"
+
+tables:
+    {{ table_prefix }}comments:
+        converters:
+            comment_author:
+                converter: 'anonymizeText'
+
+            comment_author_email:
+                converter: 'anonymizeEmail'
+                parameters:
+                    domains: [ 'localhost' ]
+
+    {{ table_prefix }}options:
+        filters:
+            - [ 'option_name', 'notLike', '_site_transient%' ]
+            - [ 'option_name', 'notLike', '_transient%' ]
+
+    {{ table_prefix }}usermeta:
+        converters:
+            meta_value:
+                converter: 'chain'
+                parameters:
+                    converters:
+                      - converter: 'anonymizeText'
+                        condition: '{{meta_key}} == "first_name"'
+                      - converter: 'anonymizeText'
+                        condition: '{{meta_key}} == "last_name"'
+                      - converter: 'randomizeNumber'
+                        condition: '{{meta_key}} == "account_phone"'
+                      - converter: 'randomizeText'
+                        condition: '{{meta_key}} == "nickname"'
+
+    {{ table_prefix }}users:
+        converters:
+            user_login:
+                converter: 'randomizeText'
+                cache_key: 'wp_username'
+                unique: true
+            user_nicename:
+                converter: 'chain'
+                parameters:
+                    converters:
+                        - converter: 'fromContext'
+                          parameters:
+                              key: 'processed_data.user_login'
+            display_name:
+                converter: 'chain'
+                parameters:
+                    converters:
+                        - converter: 'fromContext'
+                          parameters:
+                              key: 'processed_data.user_login'
+            user_email:
+                converter: 'randomizeEmail'
+                parameters:
+                    domains: ['localhost']

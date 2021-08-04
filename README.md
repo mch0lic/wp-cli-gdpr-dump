@@ -4,7 +4,7 @@ Export the database to a file with personal information anonymized.
 
 ## Installation
 
-If you're using WP-CLI v0.23.0 or later, you can install this package with:
+To install the latest version of this package run:
 
 ```
 wp package install mch0lic/wp-cli-gdpr-dump
@@ -16,5 +16,5 @@ Example:
 
 ```
 wp gdpr-dump
-wp gdpr-dump path/to/config_file.yml
+wp gdpr-dump --config=path/to/config_file.yml
 ```

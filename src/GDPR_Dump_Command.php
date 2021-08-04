@@ -1,0 +1,177 @@
+<?php
+
+use WP_CLI\Process;
+use WP_CLI\Utils;
+
+// Only run through WP CLI.
+if ( ! defined( 'WP_CLI' ) ) {
+	return;
+}
+
+/**
+ * GDPR Dump command for WP CLI.
+ */
+class GDPR_Dump_Command extends WP_CLI_Command {
+
+	/**
+	 * Exports the database to a file with personal information anonymized.
+	 *
+	 * ## Options
+	 *
+	 * [--config=<filename>]
+	 * : Path to custom YML config file.
+	 *
+	 * ## Examples
+	 *
+	 *     wp gdpr-dump
+	 *     wp gdpr-dump --config=path/to/config_file.yml
+	 *
+	 * @when after_wp_config_load
+	 *
+	 * @param array $args       Indexed array of positional arguments.
+	 * @param array $assoc_args Associative array of associative arguments.
+	 */
+	public function __invoke( $args, $assoc_args ) {
+		$assoc_args = array_merge(
+			array(
+				'config' => '',
+			),
+			$assoc_args
+		);
+
+
+		$root_path     = rtrim( ABSPATH, '/' );
+		$gdpr_dump_bin = $this->get_gdpr_dump_bin();
+		$config        = $this->get_config_file( $root_path, $assoc_args );
+
+		if ( empty( $gdpr_dump_bin ) ) {
+			WP_CLI::error( 'Unable to locate gdpr-dump executable.' );
+		}
+
+		if ( empty( $config ) ) {
+			WP_CLI::error( 'Unable to locate config file.' );
+		}
+
+		// Execute gdpr-dump.
+		$command = Utils\esc_cmd( sprintf( '%s %%s', $gdpr_dump_bin ), $config );
+		if ( WP_CLI::get_config( 'debug' ) ) {
+			WP_CLI::debug( sprintf( 'Running command: %s', $command ) );
+		}
+
+		$process_run = Process::create( $command )->run();
+
+		if ( 0 !== $process_run->return_code ) {
+			if ( ! empty( $process_run->stderr ) ) {
+				WP_CLI::error( $process_run->stderr );
+			} else {
+				WP_CLI::error( 'Database export failed.' );
+			}
+		} else {
+			WP_CLI::success( sprintf( 'Database exported successfully.', $process_run->run_time ) );
+		}
+	}
+
+	/**
+	 * Returns path to gdpr-dump bin file.
+	 *
+	 * @return string
+	 */
+	private function get_gdpr_dump_bin() {
+		$bin = rtrim( WP_CLI::get_runner()->get_packages_dir_path(), '/' ) . '/vendor/smile/gdpr-dump/bin/gdpr-dump';
+
+		if ( file_exists( $bin ) ) {
+			return $bin;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get config file.
+	 *
+	 * @param string $root_path WordPress root path.
+	 * @param array  $options Command line options.
+	 *
+	 * @return string
+	 */
+	private function get_config_file( $root_path, $options = array() ) {
+		// Config file is not provided;
+		if ( empty( $options['config'] ) ) {
+			return $this->get_default_config_path();
+		}
+
+		// Full path.
+		if ( file_exists( $options['config'] ) ) {
+			return $options['config'];
+		}
+
+		// Other plausible locations.
+		$paths = array(
+			getcwd(),
+			rtrim( preg_replace( '/\/web\/wp$/', '', $root_path ), '/' ),
+			$root_path,
+		);
+
+		foreach ( $paths as $path ) {
+			$config = WP_CLI\Utils\normalize_path( $path . DIRECTORY_SEPARATOR . $options['config'] );
+			if ( file_exists( $config ) ) {
+				return $config;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Creates a config file and returns file path.
+	 *
+	 * @return string
+	 */
+	private function get_default_config_path() {
+		global $wpdb;
+
+		$tmp_dir       = rtrim( WP_CLI\Utils\get_temp_dir(), DIRECTORY_SEPARATOR );
+		$package_root  = dirname( dirname( __FILE__ ) );
+		$template_path = $package_root . '/templates/';
+
+		$config_file = Utils\normalize_path( $tmp_dir . DIRECTORY_SEPARATOR . 'wordpress.yml' );
+		if ( file_exists( $config_file ) ) {
+			unlink( $config_file );
+		}
+
+		return $this->create_file(
+			$config_file,
+			WP_CLI\Utils\mustache_render(
+				"{$template_path}/wordpress.mustache",
+				array(
+					'db_host'         => DB_HOST,
+					'db_user'         => DB_USER,
+					'db_pass'         => DB_PASSWORD,
+					'db_name'         => DB_NAME,
+					'table_prefix'    => $wpdb->prefix,
+					'backup_filename' => 'backup-{YmdHis}.sql',
+				)
+			)
+		);
+	}
+
+	/**
+	 * Helper method for creating files.
+	 *
+	 * @param string $filename Filename including path.
+	 * @param string $contents File contents.
+	 *
+	 * @return string
+	 */
+	private function create_file( $filename, $contents ) {
+		if ( ! is_dir( dirname( $filename ) ) ) {
+			Process::create( Utils\esc_cmd( 'mkdir -p %s', dirname( $filename ) ) )->run();
+		}
+
+		if ( ! file_put_contents( $filename, $contents ) ) {
+			WP_CLI::error( sprintf( 'Error creating file: %s', $filename ) );
+		}
+
+		return $filename;
+	}
+}

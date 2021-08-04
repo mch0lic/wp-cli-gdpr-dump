@@ -1,21 +1,62 @@
 {
-  "name": "mch0lic/wp-cli-gdpr-dump",
-  "description": "",
-  "type": "wp-cli-package",
-  "keywords": ["wp-cli", "wordpress"],
-  "homepage": "https://github.com/mch0lic/wp-cli-gdpr-dump",
-  "license": "GPL-3.0-only",
-  "authors": [
-    {
-      "name": "Mindaugas Budreika",
-      "homepage": "https://github.com/mch0lic"
+    "name": "mch0lic/wp-cli-gdpr-dump",
+    "type": "wp-cli-package",
+    "description": "Exports the database to a file with personal information anonymized.",
+    "keywords": [
+        "wp-cli",
+        "wordpress"
+    ],
+    "homepage": "https://github.com/mch0lic/wp-cli-gdpr-dump",
+    "license": "GPL-3.0-only",
+    "authors": [
+        {
+            "name": "Mindaugas Budreika",
+            "homepage": "https://github.com/mch0lic"
+        }
+    ],
+    "require": {
+        "php": ">=7.3",
+        "wp-cli/wp-cli": "^2.5",
+        "smile/gdpr-dump": "^2.2"
+    },
+    "require-dev": {
+        "wp-cli/wp-cli-tests": "^3.0.11"
+    },
+    "config": {
+        "process-timeout": 7200,
+        "sort-packages": true
+    },
+    "extra": {
+        "bundled": false,
+        "commands": [
+            "gdpr-dump"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        },
+        "files": [
+            "gdpr-dump-command.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "behat": "run-behat-tests",
+        "behat-rerun": "rerun-behat-tests",
+        "lint": "run-linter-tests",
+        "phpcs": "run-phpcs-tests",
+        "phpunit": "run-php-unit-tests",
+        "prepare-tests": "install-package-tests",
+        "test": [
+            "@lint",
+            "@phpcs",
+            "@phpunit",
+            "@behat"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/mch0lic/wp-cli-gdpr-dump/issues"
     }
-  ],
-  "require": {
-    "php": ">=7.3",
-    "smile/gdpr-dump": "^2.2"
-  },
-  "autoload": {
-    "files": ["src/class-gdpr-dump-command.php"]
-  }
 }
