@@ -67,7 +67,7 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 				WP_CLI::error( 'Database export failed.' );
 			}
 		} else {
-			WP_CLI::success( sprintf( 'Database exported successfully.', $process_run->run_time ) );
+			WP_CLI::success( 'Database exported successfully.' );
 		}
 	}
 
