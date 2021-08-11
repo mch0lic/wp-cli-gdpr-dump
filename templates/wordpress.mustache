@@ -1,9 +1,9 @@
 ---
 database:
-    host: "{{db_host}}"
-    user: "{{db_user}}"
-    password: "{{db_pass}}"
-    name: "{{db_name}}"
+    host: "%env(DB_HOST)%"
+    user: "%env(DB_USER)%"
+    password: "%env(DB_PASSWORD)%"
+    name: "%env(DB_NAME)%"
 
 dump:
     output: "backup-{YmdHis}.sql"

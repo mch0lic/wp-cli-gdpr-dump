@@ -39,6 +39,14 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 			$assoc_args
 		);
 
+		// Environment variables passed to shell.
+		$env_variables = array(
+			'DB_HOST'     => DB_HOST,
+			'DB_USER'     => DB_USER,
+			'DB_PASSWORD' => DB_PASSWORD,
+			'DB_NAME'     => DB_NAME,
+		);
+
 		$root_path     = rtrim( ABSPATH, '/' );
 		$gdpr_dump_bin = $this->get_gdpr_dump_bin();
 		$config        = $this->get_config_file( $root_path, $assoc_args );
@@ -57,8 +65,7 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 			WP_CLI::debug( sprintf( 'Running command: %s', $command ) );
 		}
 
-		$process_run = Process::create( $command )->run();
-
+		$process_run = Process::create( $command, null, $env_variables )->run();
 		if ( 0 !== $process_run->return_code ) {
 			if ( ! empty( $process_run->stderr ) ) {
 				WP_CLI::error( $process_run->stderr );
@@ -138,8 +145,7 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 		$tmp_dir       = rtrim( WP_CLI\Utils\get_temp_dir(), DIRECTORY_SEPARATOR );
 		$package_root  = dirname( dirname( __FILE__ ) );
 		$template_path = $package_root . '/templates/';
-
-		$config_file = Utils\normalize_path( $tmp_dir . DIRECTORY_SEPARATOR . 'wordpress.yml' );
+		$config_file   = Utils\normalize_path( $tmp_dir . DIRECTORY_SEPARATOR . 'wordpress.yml' );
 		if ( file_exists( $config_file ) ) {
 			unlink( $config_file );
 		}
@@ -149,10 +155,6 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 			WP_CLI\Utils\mustache_render(
 				"{$template_path}/wordpress.mustache",
 				array(
-					'db_host'         => DB_HOST,
-					'db_user'         => DB_USER,
-					'db_pass'         => DB_PASSWORD,
-					'db_name'         => DB_NAME,
 					'table_prefix'    => ! empty( $table_prefix ) ? $table_prefix : 'wp_',
 					'backup_filename' => 'backup-{YmdHis}.sql',
 				)
