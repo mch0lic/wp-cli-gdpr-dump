@@ -39,7 +39,6 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 			$assoc_args
 		);
 
-
 		$root_path     = rtrim( ABSPATH, '/' );
 		$gdpr_dump_bin = $this->get_gdpr_dump_bin();
 		$config        = $this->get_config_file( $root_path, $assoc_args );
@@ -95,31 +94,37 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 	 * @return string
 	 */
 	private function get_config_file( $root_path, $options = array() ) {
-		// Config file is not provided;
-		if ( empty( $options['config'] ) ) {
-			return $this->get_default_config_path();
-		}
-
-		// Full path.
-		if ( file_exists( $options['config'] ) ) {
-			return $options['config'];
-		}
-
-		// Other plausible locations.
+		// Plausible locations for config file.
 		$paths = array(
 			getcwd(),
 			rtrim( preg_replace( '/\/web\/wp$/', '', $root_path ), '/' ),
 			$root_path,
 		);
 
+		// Config file provided.
+		if ( ! empty( $options['config'] ) ) {
+			if ( file_exists( $options['config'] ) ) {
+				return $options['config'];
+			}
+
+			foreach ( $paths as $path ) {
+				$config = WP_CLI\Utils\normalize_path( $path . DIRECTORY_SEPARATOR . $options['config'] );
+				if ( file_exists( $config ) ) {
+					return $config;
+				}
+			}
+		}
+
+		// Attempt to find gdpr-dump.yml config.
 		foreach ( $paths as $path ) {
-			$config = WP_CLI\Utils\normalize_path( $path . DIRECTORY_SEPARATOR . $options['config'] );
+			$config = WP_CLI\Utils\normalize_path( $path . DIRECTORY_SEPARATOR . 'gdpr-dump.yml' );
 			if ( file_exists( $config ) ) {
 				return $config;
 			}
 		}
 
-		return null;
+		// Create default config and return the path.
+		return $this->get_default_config_path();
 	}
 
 	/**
