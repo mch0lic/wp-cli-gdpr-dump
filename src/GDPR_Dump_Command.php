@@ -128,7 +128,7 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 	 * @return string
 	 */
 	private function get_default_config_path() {
-		global $wpdb;
+		global $table_prefix;
 
 		$tmp_dir       = rtrim( WP_CLI\Utils\get_temp_dir(), DIRECTORY_SEPARATOR );
 		$package_root  = dirname( dirname( __FILE__ ) );
@@ -148,7 +148,7 @@ class GDPR_Dump_Command extends WP_CLI_Command {
 					'db_user'         => DB_USER,
 					'db_pass'         => DB_PASSWORD,
 					'db_name'         => DB_NAME,
-					'table_prefix'    => $wpdb->prefix,
+					'table_prefix'    => ! empty( $table_prefix ) ? $table_prefix : 'wp_',
 					'backup_filename' => 'backup-{YmdHis}.sql',
 				)
 			)
