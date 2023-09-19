@@ -57,6 +57,7 @@
         ]
     },
     "support": {
-        "issues": "https://github.com/mch0lic/wp-cli-gdpr-dump/issues"
+        "issues": "https://github.com/mch0lic/wp-cli-gdpr-dump/issues",
+        "source": "https://github.com/mch0lic/wp-cli-gdpr-dump"
     }
 }
